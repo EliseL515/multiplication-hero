@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5ec8f0">
+<title>乘法小英雄 ✖️</title>
+<style>
+  :root{
+    --ink:#2b3a55; --ink-soft:#7a8aa0;
+    --card:rgba(255,255,255,.94);
+    --shadow:0 10px 30px rgba(43,58,85,.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:"Nunito","Microsoft JhengHei","PingFang TC","Heiti TC",system-ui,-apple-system,sans-serif;
+    min-height:100dvh; display:flex; justify-content:center; align-items:flex-start;
+    padding:18px 14px 36px; color:var(--ink); overflow-x:hidden;
+    touch-action:manipulation; background:#e0f6ff;
+  }
+  body[data-theme="night"]{--ink:#e0e8f0; --ink-soft:#8a9bb8; --card:rgba(40,50,75,.94);}
+  body[data-theme="ocean"]{--ink:#0a3a5c; --ink-soft:#4a7a9c;}
+
+  #bgDecor{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+  #app{position:relative; z-index:2; width:100%; max-width:540px;}
+
+  .deco{display:none; position:absolute; inset:0; overflow:hidden;}
+  body[data-theme="default"] .deco-sky{display:block;}
+  body[data-theme="ocean"]   .deco-ocean{display:block;}
+  body[data-theme="forest"]  .deco-forest{display:block;}
+  body[data-theme="sakura"]  .deco-sakura{display:block;}
+  body[data-theme="night"]   .deco-night{display:block;}
+
+  /* ---------- 天空主題 ---------- */
+  .deco-sky{background:linear-gradient(180deg,#4fc0ee 0%,#a8e0f8 55%,#e6f8ff 100%);}
+  .deco-sky .sun{
+    position:absolute; top:5%; right:8%;
+    width:84px; height:84px; border-radius:50%;
+    background:radial-gradient(circle,#fffcd0,#ffd93b);
+    box-shadow:0 0 50px #ffe97a, 0 0 100px rgba(255,243,160,.7);
+    animation:sunPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes sunPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
+  .deco-sky .cloud{
+    position:absolute; background:#fff; border-radius:100px; opacity:.95;
+    filter:drop-shadow(0 6px 12px rgba(80,150,200,.18));
+  }
+  .deco-sky .cloud::before,
+  .deco-sky .cloud::after{content:''; position:absolute; background:#fff; border-radius:50%;}
+  .c1{width:120px;height:42px;top:15%;left:-140px;animation:drift 24s linear infinite;}
+  .c1::before{width:62px;height:62px;top:-30px;left:18px;}
+  .c1::after{width:46px;height:46px;top:-24px;left:62px;}
+  .c2{width:90px;height:32px;top:28%;left:-110px;animation:drift 30s linear infinite 4s;opacity:.85;}
+  .c2::before{width:48px;height:48px;top:-22px;left:12px;}
+  .c2::after{width:36px;height:36px;top:-16px;left:46px;}
+  .c3{width:150px;height:48px;top:7%;left:-170px;animation:drift 38s linear infinite 9s;opacity:.7;}
+  .c3::before{width:76px;height:76px;top:-38px;left:20px;}
+  .c3::after{width:54px;height:54px;top:-28px;left:78px;}
+  @keyframes drift{0%{transform:translateX(0);}100%{transform:translateX(calc(100vw + 220px));}}
+  .deco-sky .hill{position:absolute; bottom:-40px; border-radius:50% 50% 0 0;}
+  .h1{width:75vw;height:130px;left:-12vw;background:linear-gradient(180deg,#7ed17e,#4fb050);}
+  .h2{width:85vw;height:105px;right:-22vw;background:linear-gradient(180deg,#62c264,#3d9a40);}
+
+  /* ---------- 海洋主題 ---------- */
+  .deco-ocean{background:linear-gradient(180deg,#0b5a96 0%,#1a8ac4 45%,#5ecbe8 100%);}
+  .deco-ocean .ray{
+    position:absolute; top:-10%; width:80px; height:120%;
+    background:linear-gradient(180deg,rgba(255,255,255,.35),transparent 70%);
+    transform:skewX(-15deg);
+    animation:rayMove 7s ease-in-out infinite;
+  }
+  .r1{left:12%;}
+  .r2{left:46%;animation-delay:2.5s;}
+  .r3{left:78%;animation-delay:5s;}
+  @keyframes rayMove{
+    0%,100%{opacity:.25;transform:skewX(-15deg) translateX(0);}
+    50%{opacity:.65;transform:skewX(-15deg) translateX(20px);}
+  }
+  .deco-ocean .bubble{
+    position:absolute; border-radius:50%; bottom:-40px;
+    background:rgba(255,255,255,.35);
+    border:1.5px solid rgba(255,255,255,.6);
+    animation:bubbleUp 9s linear infinite;
+  }
+  .b1{width:14px;height:14px;left:18%;}
+  .b2{width:20px;height:20px;left:52%;animation-delay:2.5s;}
+  .b3{width:10px;height:10px;left:72%;animation-delay:5s;}
+  .b4{width:16px;height:16px;left:34%;animation-delay:7s;}
+  @keyframes bubbleUp{
+    0%{bottom:-40px;opacity:0;}
+    10%{opacity:.75;}
+    85%{opacity:.75;}
+    100%{bottom:110%;opacity:0;}
+  }
+
+  /* ★★★ 修正後的小魚動畫：所有魚都朝移動方向游 ★★★ */
+  .deco-ocean .fish{
+    position:absolute;
+    left:0;
+    will-change:transform;
+    backface-visibility:hidden;
+    transform-origin:center center;
+    filter:drop-shadow(0 3px 6px rgba(0,30,60,.25));
+    opacity:.95;
+  }
+
+  /* 向右游的魚：emoji 預設朝左，用 scaleX(-1) 翻成朝右 */
+  .f1{
+    top:28%; font-size:2.2rem;
+    animation:swimRight 16s linear infinite;
+    animation-delay:-3s;
+  }
+  .f2{
+    top:56%; font-size:1.5rem;
+    animation:swimRight 20s linear infinite;
+    animation-delay:-9s;
+  }
+
+  /* 向左游的魚：保持 emoji 預設朝左，不翻轉 */
+  .f3{
+    top:16%; font-size:1.8rem;
+    animation:swimLeft 24s linear infinite;
+    animation-delay:-6s;
+  }
+
+  @keyframes swimRight{
+    0%   { transform: translate3d(-90px, 0, 0) scaleX(-1); }
+    100% { transform: translate3d(calc(100vw + 90px), 0, 0) scaleX(-1); }
+  }
+  @keyframes swimLeft{
+    0%   { transform: translate3d(calc(100vw + 90px), 0, 0) scaleX(1); }
+    100% { transform: translate3d(-90px, 0, 0) scaleX(1); }
+  }
+
+  .deco-ocean .weed{
+    position:absolute; bottom:0; width:18px;
+    background:linear-gradient(180deg,#2d9c5a,#166838);
+    border-radius:50% 50% 0 0;
+    transform-origin:bottom;
+    animation:sway 3.2s ease-in-out infinite;
+  }
+  .w1{left:8%;height:120px;}
+  .w2{left:14%;height:90px;animation-delay:.6s;}
+  .w3{right:10%;height:110px;animation-delay:1.2s;}
+  .w4{right:16%;height:80px;animation-delay:1.8s;}
+  @keyframes sway{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+
+  /* ---------- 森林主題 ---------- */
+  .deco-forest{background:linear-gradient(180deg,#b8e8c8 0%,#ddf0c8 55%,#f5f8d8 100%);}
+  .deco-forest .glow{
+    position:absolute; top:-60px; right:8%;
+    width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,190,.85),transparent 70%);
+  }
+  .deco-forest .tree{
+    position:absolute; bottom:0; width:0; height:0;
+    border-left:52px solid transparent;
+    border-right:52px solid transparent;
+    border-bottom:150px solid #3d9a40;
+    filter:drop-shadow(2px 6px 6px rgba(0,80,0,.2));
+  }
+  .t1{left:4%;}
+  .t2{left:24%;border-bottom-color:#4fb050;border-bottom-width:105px;bottom:18px;}
+  .t3{right:6%;}
+  .t4{right:26%;border-bottom-color:#4fb050;border-bottom-width:120px;bottom:8px;}
+  .deco-forest .mush{position:absolute; bottom:22px; font-size:1.9rem;}
+  .m1{left:14%;}
+  .m2{right:17%;font-size:1.4rem;}
+  .deco-forest .fly{position:absolute; font-size:1.4rem; left:-50px; top:30%; animation:flutter 11s ease-in-out infinite;}
+  .bf2{top:52%;animation-delay:5.5s;}
+  @keyframes flutter{
+    0%{transform:translate(0,0);}
+    25%{transform:translate(28vw,-32px);}
+    50%{transform:translate(54vw,18px);}
+    75%{transform:translate(78vw,-22px);}
+    100%{transform:translate(calc(100vw + 50px),0);}
+  }
+
+  /* ---------- 櫻花主題 ---------- */
+  .deco-sakura{background:linear-gradient(180deg,#ffc8dc 0%,#ffe4ef 50%,#fff5f8 100%);}
+  .deco-sakura .mt{
+    position:absolute; bottom:0; width:0; height:0;
+    border-left:200px solid transparent;
+    border-right:200px solid transparent;
+  }
+  .mt1{left:-60px;border-bottom:170px solid #e8a8c0;opacity:.45;}
+  .mt2{right:-90px;border-bottom:135px solid #d890b0;opacity:.4;}
+  .deco-sakura .petal{
+    position:absolute; top:-30px; font-size:1.2rem;
+    animation:petalFall 11s linear infinite;
+  }
+  .p1{left:8%;}
+  .p2{left:26%;animation-delay:2s;}
+  .p3{left:46%;animation-delay:4s;}
+  .p4{left:66%;animation-delay:6s;}
+  .p5{left:84%;animation-delay:8s;}
+  @keyframes petalFall{
+    0%{transform:translateY(0) rotate(0);opacity:1;}
+    100%{transform:translateY(110vh) rotate(600deg);opacity:.4;}
+  }
+
+  /* ---------- 星空主題 ---------- */
+  .deco-night{
+    background:
+      radial-gradient(1px 1px at 10% 12%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 28% 22%,#fff,transparent),
+      radial-gradient(1px 1px at 48% 8%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 68% 18%,#fff,transparent),
+      radial-gradient(1px 1px at 88% 10%,#fff,transparent),
+      radial-gradient(1px 1px at 18% 42%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 42% 55%,#fff,transparent),
+      radial-gradient(1px 1px at 62% 38%,#fff,transparent),
+      radial-gradient(1px 1px at 82% 50%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 92% 32%,#fff,transparent),
+      radial-gradient(1px 1px at 8% 68%,#fff,transparent),
+      radial-gradient(1px 1px at 35% 80%,#fff,transparent),
+      radial-gradient(1.5px 1.5px at 58% 72%,#fff,transparent),
+      radial-gradient(1px 1px at 76% 85%,#fff,transparent),
+      radial-gradient(1px 1px at 95% 68%,#fff,transparent),
+      linear-gradient(180deg,#0a0f2c 0%,#1a2350 55%,#2d3870 100%);
+    animation:skyTwinkle 5s ease-in-out infinite;
+  }
+  @keyframes skyTwinkle{0%,100%{filter:brightness(1);}50%{filter:brightness(1.25);}}
+  .deco-night .moon{
+    position:absolute; top:8%; right:12%;
+    width:70px; height:70px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#fffef0,#ffe680 70%);
+    animation:moonGlow 4s ease-in-out infinite;
+  }
+  @keyframes moonGlow{
+    0%,100%{box-shadow:0 0 40px rgba(255,240,180,.7),0 0 90px rgba(255,240,180,.35);}
+    50%{box-shadow:0 0 60px rgba(255,240,180,.95),0 0 130px rgba(255,240,180,.55);}
+  }
+  .deco-night .mount{
+    position:absolute; bottom:0; width:0; height:0;
+    border-left:220px solid transparent;
+    border-right:220px solid transparent;
+    border-bottom:160px solid #0d1535;
+  }
+  .mm1{left:-70px;border-bottom-color:#131c40;}
+  .mm2{right:-90px;border-bottom-width:120px;border-bottom-color:#0d1535;}
+  .deco-night .meteor{
+    position:absolute; font-size:1.2rem;
+    animation:meteorFly 6s linear infinite;
+    opacity:0;
+  }
+  .mt1s{top:15%;left:-40px;}
+  .mt2s{top:35%;left:-40px;animation-delay:3s;}
+  @keyframes meteorFly{
+    0%{transform:translate(0,0) rotate(45deg);opacity:0;}
+    10%{opacity:1;}
+    60%{opacity:1;}
+    100%{transform:translate(70vw,50vh) rotate(45deg);opacity:0;}
+  }
+
+  /* =====================================================
+     主體樣式
+     ===================================================== */
+  .screen{display:none; animation:fadeUp .35s ease both;}
+  .screen.active{display:block;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;}}
+  .card{
+    background:var(--card); border-radius:28px; padding:22px 20px;
+    box-shadow:var(--shadow); border:3px solid rgba(255,255,255,.7);
+    backdrop-filter:blur(8px);
+  }
+
+  .top-bar{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .top-actions{display:flex; gap:6px;}
+  .user-chip{
+    display:flex; align-items:center; gap:6px; background:#eef4ff; border:none;
+    border-radius:14px; padding:6px 10px; cursor:pointer; font-family:inherit;
+    font-weight:800; font-size:.9rem; color:#4a6fa5; box-shadow:0 3px 0 #d7e4f7;
+    max-width:150px;
+  }
+  .user-chip span:last-child{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .user-chip:active{transform:translateY(2px); box-shadow:none;}
+  .logo{font-size:3.2rem; text-align:center; line-height:1; animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+  h1{font-size:clamp(1.6rem,6.5vw,2rem); margin:8px 0 4px; text-align:center; letter-spacing:2px;}
+  .sub{text-align:center; color:var(--ink-soft); margin:0 0 6px; font-size:.95rem;}
+
+  .level-badge{
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    background:#fff8e0; border-radius:16px; padding:8px 12px; margin:10px auto 0;
+    max-width:300px; font-weight:900; color:#b8860b; font-size:.9rem;
+  }
+  .energy-bar{flex:1; height:10px; background:#f0e4bc; border-radius:999px; overflow:hidden;}
+  .energy-fill{height:100%; width:0%; background:linear-gradient(90deg,#ffd86b,#ffae34); border-radius:999px; transition:width .5s;}
+
+  .quick-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;}
+  .quick-btn{
+    padding:12px; border:none; border-radius:16px; cursor:pointer; font-family:inherit;
+    font-weight:900; font-size:.9rem;
+    background:linear-gradient(180deg,#e8f4ff,#d8ecff); color:#4a6fa5;
+    box-shadow:0 3px 0 #c0d8ef;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .quick-btn:active{transform:translateY(3px); box-shadow:none;}
+  .quick-btn.highlight{background:linear-gradient(180deg,#fff3b8,#ffe066); color:#8a6600; box-shadow:0 3px 0 #e0c050;}
+
+  .levels{display:flex; flex-direction:column; gap:11px; margin-top:14px;}
+  .level-btn{
+    display:flex; align-items:center; gap:14px; background:var(--card); border:none; border-radius:20px; padding:13px 16px;
+    box-shadow:0 4px 0 #dbe7f5, 0 6px 16px rgba(43,58,85,.07);
+    cursor:pointer; text-align:left; font-family:inherit; color:var(--ink);
+    transition:transform .1s, box-shadow .1s;
+  }
+  .level-btn:active{transform:translateY(4px); box-shadow:0 0 0 #dbe7f5;}
+  .level-emoji{font-size:1.7rem; width:46px; height:46px; flex:0 0 46px; display:grid; place-items:center; border-radius:15px; background:#f3f8ff;}
+  .level-text{flex:1; min-width:0;}
+  .level-name{display:block; font-weight:800; font-size:1.05rem;}
+  .level-sub{display:block; font-size:.84rem; color:var(--ink-soft); margin-top:2px;}
+  .level-stars{font-size:.8rem; letter-spacing:1px; flex:0 0 auto;}
+  .hint{text-align:center; font-size:.78rem; color:var(--ink-soft); margin:18px 0 0; line-height:1.5;}
+  .wrong-mode-btn, .custom-practice-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; margin-top:12px; padding:13px; border:none; border-radius:18px; cursor:pointer;
+    font-family:inherit; font-weight:900; font-size:.95rem;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .wrong-mode-btn{background:linear-gradient(180deg,#fff3d6,#ffe2a8); color:#a86800; box-shadow:0 4px 0 #f0c770;}
+  .custom-practice-btn{background:linear-gradient(180deg,#e8e0ff,#d0c4ff); color:#5a45b8; box-shadow:0 4px 0 #b0a0e0;}
+  .wrong-mode-btn:active, .custom-practice-btn:active{transform:translateY(4px); box-shadow:none;}
+
+  .hud{display:flex; align-items:center; gap:10px;}
+  .icon-btn{
+    border:none; background:#eef4ff; color:#5b7bb0; font-size:1.15rem; font-weight:800;
+    width:42px; height:42px; flex:0 0 42px; border-radius:14px; cursor:pointer;
+    box-shadow:0 3px 0 #d7e4f7; transition:transform .08s; font-family:inherit;
+    display:grid; place-items:center;
+  }
+  .icon-btn:active{transform:translateY(3px); box-shadow:none;}
+  .icon-btn:disabled{opacity:.35; cursor:default;}
+  .progress{flex:1; height:14px; background:#e8f1ff; border-radius:999px; overflow:hidden;}
+  .progress-fill{height:100%; width:0%; background:linear-gradient(90deg,#66d6a1,#4ecdc4); border-radius:999px; transition:width .4s ease;}
+  .score-pill{font-weight:900; color:#f39c12; background:#fff6e0; padding:8px 12px; border-radius:13px; min-width:58px; text-align:center; font-size:1rem;}
+  .combo{
+    text-align:center; font-weight:900; font-size:.95rem; height:26px; line-height:26px; margin-top:6px;
+    opacity:0; transform:scale(.7); transition:opacity .2s, transform .2s;
+  }
+  .combo.show{opacity:1; transform:scale(1);}
+  .combo.lv1{color:#ff6b6b;} .combo.lv2{color:#ff4d4d; font-size:1.05rem;}
+  .combo.lv3{color:#e63946; font-size:1.15rem; text-shadow:0 0 8px rgba(230,57,70,.3);}
+  .combo.lv4{color:#c1121f; font-size:1.3rem; text-shadow:0 0 12px rgba(193,18,31,.5); animation:comboPulse .6s ease infinite;}
+  @keyframes comboPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+  .question{text-align:center; font-weight:900; font-size:clamp(1.8rem,8.5vw,2.9rem); padding:18px 4px 10px; letter-spacing:1px; line-height:1.2; animation:pop .25s ease;}
+  .question .q{color:#ff8a3d;}
+  .question strong{color:#ff6b6b;}
+  .question .small{font-size:.55em; color:var(--ink-soft); display:block; margin-bottom:6px; font-weight:700; letter-spacing:0;}
+  .hint-area{display:none; text-align:center; padding:6px 0 14px;}
+  .hint-area.show{display:block; animation:fadeUp .25s ease;}
+  .hint-grid{display:inline-grid; gap:5px; background:#f4f9ff; padding:12px; border-radius:14px;}
+  .dot{width:clamp(10px,3vw,14px); height:clamp(10px,3vw,14px); border-radius:50%; background:#ffb347; display:block;}
+  .options{display:grid; grid-template-columns:1fr 1fr; gap:13px;}
+  .opt{
+    position:relative; font-family:inherit; font-weight:900; font-size:clamp(1.5rem,7.5vw,2.1rem);
+    padding:clamp(15px,4.5vw,24px) 0; border:none; border-radius:22px;
+    background:linear-gradient(180deg,#ffffff,#f2f8ff); color:var(--ink);
+    box-shadow:0 5px 0 #cfe1f7, 0 8px 18px rgba(43,58,85,.08); cursor:pointer;
+    transition:transform .08s, box-shadow .08s, background .18s, color .18s;
+  }
+  .opt.text-opt{font-size:clamp(1.1rem,5vw,1.5rem); padding:clamp(13px,3.8vw,18px) 0; letter-spacing:.5px;}
+  .opt.symbol{font-size:clamp(2rem,9vw,2.6rem); padding:clamp(12px,3.5vw,20px) 0;}
+  .opt:active{transform:translateY(4px); box-shadow:0 1px 0 #cfe1f7;}
+  .opt.correct{background:linear-gradient(180deg,#7ee79b,#4ecb71); color:#fff; box-shadow:0 5px 0 #35a95a; animation:pop .28s ease;}
+  .opt.correct::after{content:'✓'; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1em; opacity:.9;}
+  .opt.wrong{background:linear-gradient(180deg,#ff9a9a,#f86969); color:#fff; box-shadow:0 5px 0 #d34d4d; animation:shake .32s ease;}
+  .opt.wrong::after{content:'✗'; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:1.1em; opacity:.9;}
+  @keyframes pop{0%{transform:scale(.85);}70%{transform:scale(1.06);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+  .feedback{text-align:center; font-weight:800; font-size:1rem; height:28px; line-height:28px; margin-top:14px; opacity:0; transition:opacity .2s;}
+  .feedback.good{color:#2fae62; opacity:1;}
+  .feedback.bad{color:#e05252; opacity:1;}
+
+  .end-card{text-align:center;}
+  .end-card h2{font-size:1.5rem; margin:6px 0 4px;}
+  .stars{font-size:2.8rem; letter-spacing:10px; margin:12px 0 4px; line-height:1;}
+  .star{display:inline-block; animation:pop .45s backwards;}
+  .star.dim{opacity:.18; filter:grayscale(1);}
+  .star-caption{font-size:.85rem; color:var(--ink-soft); margin:2px 0 8px; font-weight:700;}
+  .end-stats{display:flex; gap:12px; margin:16px 0 18px;}
+  .stat{flex:1; background:#f4f9ff; border-radius:18px; padding:14px 8px;}
+  .stat-label{display:block; font-size:.8rem; color:var(--ink-soft); font-weight:700;}
+  .stat-value{display:block; font-size:1.5rem; font-weight:900; color:#f39c12; margin-top:4px;}
+  .end-btns{display:flex; flex-direction:column; gap:11px;}
+  .btn{
+    font-family:inherit; font-weight:900; font-size:1.05rem; padding:15px;
+    border:none; border-radius:18px; cursor:pointer;
+    background:#eef4ff; color:#4a6fa5; box-shadow:0 4px 0 #d7e4f7;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active{transform:translateY(4px); box-shadow:none;}
+  .btn.primary{background:linear-gradient(180deg,#7ee79b,#4ecb71); color:#fff; box-shadow:0 4px 0 #35a95a;}
+  .btn.warn{background:linear-gradient(180deg,#ffd98a,#ffbe4d); color:#7a4d00; box-shadow:0 4px 0 #e0a030;}
+
+  .spark{position:fixed; pointer-events:none; font-size:1.4rem; z-index:999; animation:fly .85s ease-out forwards;}
+  @keyframes fly{0%{transform:translate(-50%,-50%) scale(.3); opacity:1;}100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2); opacity:0;}}
+
+  .toast{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-120%);
+    background:linear-gradient(135deg,#ffd86b,#ffae34); color:#5a3d00;
+    padding:12px 22px; border-radius:16px; font-weight:900; font-size:.95rem;
+    box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:2000; transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+    max-width:90vw; text-align:center;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,30,50,.5); z-index:1500;
+    display:none; align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(4px);
+  }
+  .modal-backdrop.show{display:flex; animation:fadeUp .2s ease;}
+  .modal-box{
+    background:#fff; border-radius:24px; padding:22px 20px; max-width:420px; width:100%;
+    max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.25);
+    color:#2b3a55;
+  }
+  body[data-theme="night"] .modal-box{background:#2d3a5c; color:#e0e8f0;}
+  .modal-box h3{margin:0 0 14px; font-size:1.2rem; text-align:center;}
+  .modal-row{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid #eef2f8; gap:10px;}
+  .modal-row:last-child{border-bottom:none;}
+  .modal-row label{font-weight:700; font-size:.95rem; flex:1;}
+  .seg{display:flex; gap:5px; background:#eef4ff; border-radius:12px; padding:4px;}
+  .seg button{padding:7px 13px; border:none; border-radius:9px; background:none; font-family:inherit; font-weight:800; font-size:.85rem; color:#7a8aa0; cursor:pointer;}
+  .seg button.on{background:#fff; color:#2b3a55; box-shadow:0 2px 6px rgba(0,0,0,.1);}
+  .modal-actions{display:flex; gap:10px; margin-top:16px;}
+  .modal-actions .btn{flex:1; padding:13px; font-size:.95rem;}
+
+  .badge-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px;}
+  .badge-item{text-align:center; padding:12px 6px; border-radius:14px; background:#f4f9ff; transition:transform .1s;}
+  .badge-item.owned{background:linear-gradient(180deg,#fff8d0,#ffe88a);}
+  .badge-item:not(.owned){opacity:.5; filter:grayscale(1);}
+  .badge-icon{font-size:1.8rem; line-height:1; display:block;}
+  .badge-name{display:block; font-size:.7rem; font-weight:800; margin-top:5px; line-height:1.2;}
+  .badge-desc{display:block; font-size:.6rem; color:#7a8aa0; margin-top:3px; line-height:1.2;}
+
+  .user-list{display:flex; flex-direction:column; gap:8px; margin:10px 0;}
+  .user-item{
+    display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px;
+    background:#f4f9ff; border:2px solid transparent; cursor:pointer; font-family:inherit;
+    font-weight:800; font-size:.95rem; color:inherit; text-align:left;
+  }
+  .user-item.on{border-color:#4ecb71; background:#e6fbe9;}
+  .user-item .avatar{font-size:1.3rem;}
+
+  .table-check{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:12px 0;}
+  .table-check button{
+    padding:12px 4px; border:2px solid #d8e4f4; border-radius:12px; background:#fff;
+    font-family:inherit; font-weight:900; font-size:1rem; color:#4a6fa5; cursor:pointer;
+  }
+  .table-check button.on{background:#4ecb71; color:#fff; border-color:#4ecb71;}
+
+  .theme-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;}
+  .theme-card{
+    border-radius:16px; padding:0; border:3px solid transparent; overflow:hidden;
+    cursor:pointer; font-family:inherit; background:#f4f9ff; text-align:center;
+    display:flex; flex-direction:column; transition:transform .1s;
+  }
+  .theme-card:active{transform:scale(.97);}
+  .theme-card.on{border-color:#4ecb71;}
+  .theme-card:disabled{opacity:.55; cursor:not-allowed;}
+  .theme-preview{height:70px; position:relative; overflow:hidden;}
+  .theme-preview.sky{background:linear-gradient(180deg,#4fc0ee,#a8e0f8);}
+  .theme-preview.sky::after{content:'☀️'; position:absolute; top:8px; right:10px; font-size:1.4rem;}
+  .theme-preview.ocean{background:linear-gradient(180deg,#0b5a96,#5ecbe8);}
+  .theme-preview.ocean::after{content:'🐠'; position:absolute; bottom:8px; left:12px; font-size:1.4rem; animation:previewFish 3s ease-in-out infinite; transform:scaleX(-1);}
+  .theme-preview.ocean::before{content:'🐟'; position:absolute; bottom:12px; left:50%; font-size:1.1rem; animation:previewFish 4s ease-in-out infinite 1s;}
+  @keyframes previewFish{0%,100%{transform:translateX(0) scaleX(-1);}50%{transform:translateX(6px) scaleX(-1);}}
+  .theme-preview.forest{background:linear-gradient(180deg,#b8e8c8,#ddf0c8);}
+  .theme-preview.forest::after{content:'🌳'; position:absolute; bottom:4px; left:10px; font-size:1.6rem;}
+  .theme-preview.forest::before{content:'🦋'; position:absolute; top:10px; right:12px; font-size:1rem; animation:previewFly 3s ease-in-out infinite;}
+  @keyframes previewFly{0%,100%{transform:translate(0,0);}50%{transform:translate(-6px,-4px);}}
+  .theme-preview.sakura{background:linear-gradient(180deg,#ffc8dc,#ffe4ef);}
+  .theme-preview.sakura::after{content:'🌸'; position:absolute; top:6px; left:12px; font-size:1rem; animation:previewPetal 3s ease-in-out infinite;}
+  .theme-preview.sakura::before{content:'🌸'; position:absolute; bottom:8px; right:12px; font-size:1.2rem; animation:previewPetal 4s ease-in-out infinite 1s;}
+  @keyframes previewPetal{0%,100%{transform:translateY(0) rotate(0);}50%{transform:translateY(6px) rotate(20deg);}}
+  .theme-preview.night{background:linear-gradient(180deg,#0a0f2c,#2d3870);}
+  .theme-preview.night::after{content:'🌙'; position:absolute; top:8px; right:10px; font-size:1.4rem;}
+  .theme-preview.night::before{content:'✨'; position:absolute; top:20px; left:18px; font-size:.9rem; animation:previewPetal 2s ease-in-out infinite;}
+  .theme-name{padding:8px 4px; font-weight:900; font-size:.8rem; color:#2b3a55;}
+  .theme-cost{font-size:.7rem; color:#7a8aa0; font-weight:700; padding:0 0 8px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .card, .opt, .btn, .icon-btn, .star, .combo, .spark,
+    .toast, .user-item, .theme-card, .level-btn,
+    .question, .deco-night{
+      animation-duration:.01ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;
+    }
+  }
+</style>
+</head>
+<body data-theme="default">
+
+<div id="bgDecor">
+  <div class="deco deco-sky">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <div class="hill h1"></div>
+    <div class="hill h2"></div>
+  </div>
+  <div class="deco deco-ocean">
+    <div class="ray r1"></div>
+    <div class="ray r2"></div>
+    <div class="ray r3"></div>
+    <div class="bubble b1"></div>
+    <div class="bubble b2"></div>
+    <div class="bubble b3"></div>
+    <div class="bubble b4"></div>
+    <div class="fish f1">🐠</div>
+    <div class="fish f2">🐟</div>
+    <div class="fish f3">🐡</div>
+    <div class="weed w1"></div>
+    <div class="weed w2"></div>
+    <div class="weed w3"></div>
+    <div class="weed w4"></div>
+  </div>
+  <div class="deco deco-forest">
+    <div class="glow"></div>
+    <div class="tree t1"></div>
+    <div class="tree t2"></div>
+    <div class="tree t3"></div>
+    <div class="tree t4"></div>
+    <div class="mush m1">🍄</div>
+    <div class="mush m2">🍄</div>
+    <div class="fly bf1">🦋</div>
+    <div class="fly bf2">🦋</div>
+  </div>
+  <div class="deco deco-sakura">
+    <div class="mt mt1"></div>
+    <div class="mt mt2"></div>
+    <div class="petal p1">🌸</div>
+    <div class="petal p2">🌸</div>
+    <div class="petal p3">🌸</div>
+    <div class="petal p4">🌸</div>
+    <div class="petal p5">🌸</div>
+  </div>
+  <div class="deco deco-night">
+    <div class="moon"></div>
+    <div class="mount mm1"></div>
+    <div class="mount mm2"></div>
+    <div class="meteor mt1s">✨</div>
+    <div class="meteor mt2s">✨</div>
+  </div>
+</div>
+
+<div id="app">
+
+  <section id="startScreen" class="screen active">
+    <div class="card">
+      <div class="top-bar">
+        <button class="user-chip" id="userBtn">
+          <span id="userAvatar">👤</span>
+          <span id="userName">玩家</span>
+        </button>
+        <div class="top-actions">
+          <button class="icon-btn" id="themeBtn" title="主題背景">🎨</button>
+          <button class="icon-btn" id="soundBtn" title="音效開關">🔊</button>
+          <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
+        </div>
+      </div>
+      <div class="logo">✖️</div>
+      <h1>乘法小英雄</h1>
+      <div class="level-badge">
+        <span>⚡ Lv.<span id="levelNum">1</span></span>
+        <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+        <span id="energyTxt">0/20</span>
+      </div>
+      <div class="quick-actions">
+        <button class="quick-btn" id="dailyBtn">📅 每日挑戰</button>
+        <button class="quick-btn" id="badgesBtn">🏅 徽章 <span id="badgeCount">0/9</span></button>
+      </div>
+      <div class="levels" id="levelList"></div>
+      <button class="wrong-mode-btn" id="wrongModeBtn" style="display:none;">
+        📚 錯題重練（<span id="wrongCount">0</span>）
+      </button>
+      <button class="custom-practice-btn" id="customBtn">🎯 自選表格練習</button>
+      <p class="hint">
+        ⭐ 星星規則：單關全對 3 星 · 錯 1-2 題 2 星 · 其他 1 星<br>
+        🎨 累積星星可解鎖更多主題背景！
+      </p>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="screen">
+    <div class="card">
+      <div class="hud">
+        <button class="icon-btn" id="backBtn" aria-label="返回主頁">←</button>
+        <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+        <button class="icon-btn" id="hintBtn" aria-label="提示" title="提示">💡</button>
+        <div class="score-pill" id="scoreVal">0</div>
+      </div>
+      <div class="combo" id="comboTag"></div>
+      <div class="question" id="questionText"></div>
+      <div class="hint-area" id="hintArea"></div>
+      <div class="options" id="optionsBox"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  </section>
+
+  <section id="endScreen" class="screen">
+    <div class="card end-card">
+      <h2 id="endTitle">太厲害了！</h2>
+      <div class="stars" id="endStars"></div>
+      <div class="star-caption" id="starCaption"></div>
+      <div class="end-stats">
+        <div class="stat"><span class="stat-label">得分</span><span class="stat-value" id="endScore">0</span></div>
+        <div class="stat"><span class="stat-label">答對</span><span class="stat-value" id="endCorrect">0 / 10</span></div>
+      </div>
+      <div class="end-btns">
+        <button class="btn primary" id="replayBtn">再玩一次</button>
+        <button class="btn warn" id="wrongAgainBtn" style="display:none;">📚 重練錯題</button>
+        <button class="btn" id="menuBtn">🏠 回到主頁</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = 'mul_hero_state_v3';
+
+function newUserData(){
+  return {
+    bestStars: {}, wrongBook: [], adaptiveStats: {}, badges: [],
+    energy: 0, level: 1, extraStars: 0,
+    theme: 'default', unlockedThemes: ['default'],
+    dailyDone: '', settings: { perLevel: 10 },
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s && s.users && s.currentUser && s.users[s.currentUser]){
+        for(const name in s.users){
+          s.users[name] = Object.assign(newUserData(), s.users[name]);
+          s.users[name].settings = Object.assign({ perLevel: 10 }, s.users[name].settings || {});
+        }
+        return s;
+      }
+    }
+  }catch(e){}
+  return { currentUser: '玩家', users: { '玩家': newUserData() } };
+}
+
+let state = loadState();
+function saveState(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function user(){ return state.users[state.currentUser]; }
+
+let soundOn = true;
+try{ soundOn = localStorage.getItem('mul_hero_sound_v1') !== 'off'; }catch(e){}
+function saveSound(){ try{ localStorage.setItem('mul_hero_sound_v1', soundOn ? 'on' : 'off'); }catch(e){} }
+
+const LEVELS = [
+  { name:'暖身關', sub:'0、1 的乘法',       tables:[0,1],   emoji:'🌡️', bg:'#e6f0ff', types:['basic'] },
+  { name:'第 1 關', sub:'2、5、10 的乘法表', tables:[2,5,10], emoji:'🌱', bg:'#e6fbe9', types:['basic'] },
+  { name:'第 2 關', sub:'3、4 的乘法表',     tables:[3,4],    emoji:'🌼', bg:'#fff4e0', types:['basic','compare'] },
+  { name:'第 3 關', sub:'6、7 的乘法表',     tables:[6,7],    emoji:'🍀', bg:'#e3f8f6', types:['basic','missing'] },
+  { name:'第 4 關', sub:'8、9 的乘法表',     tables:[8,9],    emoji:'🔥', bg:'#ffeee6', types:['basic','missing','compare'] },
+  { name:'第 5 關', sub:'2~9 全部混合',      tables:[2,3,4,5,6,7,8,9], emoji:'⭐', bg:'#f0e8ff', types:['basic','missing','compare','repeat','word'] },
+  { name:'第 6 關', sub:'挑戰大魔王！',       tables:[2,3,4,5,6,7,8,9], emoji:'👑', bg:'#ffe9f2', types:['missing','compare','repeat','word','biggest'] },
+];
+
+const BADGES = [
+  { id:'first_step',  icon:'🌱', name:'初出茅廬', desc:'完成第一關' },
+  { id:'warmup',      icon:'🌡️', name:'暖身達人', desc:'暖身關 3 星' },
+  { id:'combo5',      icon:'🔥', name:'連擊高手', desc:'5 連擊' },
+  { id:'combo10',     icon:'⚡', name:'連擊大師', desc:'10 連擊' },
+  { id:'perfect',     icon:'💎', name:'完美通關', desc:'單關全對' },
+  { id:'three_star',  icon:'⭐', name:'三星高手', desc:'任意關 3 星' },
+  { id:'all_three',   icon:'👑', name:'滿星王者', desc:'全部關卡 3 星' },
+  { id:'wrong_killer',icon:'🎯', name:'錯題殺手', desc:'完成錯題重練' },
+  { id:'daily_hero',  icon:'📅', name:'每日勇士', desc:'完成每日挑戰' },
+];
+
+const THEMES = [
+  { id:'default', name:'晴空樂園', icon:'☀️', cls:'sky',    stars:0  },
+  { id:'ocean',   name:'海底世界', icon:'🐠', cls:'ocean',  stars:10 },
+  { id:'forest',  name:'魔法森林', icon:'🌳', cls:'forest', stars:20 },
+  { id:'sakura',  name:'櫻花仙境', icon:'🌸', cls:'sakura', stars:30 },
+  { id:'night',   name:'星空之夜', icon:'🌙', cls:'night',  stars:50 },
+];
+
+function totalStars(){
+  const u = user();
+  let s = 0;
+  for(const k in u.bestStars) s += u.bestStars[k] || 0;
+  return s + (u.extraStars || 0);
+}
+
+function applyTheme(){
+  document.body.dataset.theme = user().theme || 'default';
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',
+    user().theme === 'night' ? '#0a0f2c' : '#5ec8f0');
+}
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[randInt(0, arr.length - 1)];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showToast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function openModal(html){
+  const b = $('#modalBackdrop');
+  b.innerHTML = '<div class="modal-box">' + html + '</div>';
+  b.classList.add('show');
+}
+function closeModal(){
+  const b = $('#modalBackdrop');
+  b.classList.remove('show');
+  b.innerHTML = '';
+}
+$('#modalBackdrop').addEventListener('click', e => {
+  if(e.target.id === 'modalBackdrop') closeModal();
+});
+
+let actx = null;
+function getAudio(){
+  if(!soundOn) return null;
+  try{
+    if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    return actx;
+  }catch(e){ return null; }
+}
+function tone(freq, start, dur, type = 'sine', vol = 0.12){
+  const ctx = getAudio(); if(!ctx) return;
+  const t0 = ctx.currentTime + start;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
+function sfxCorrect(combo){
+  const base = 550 + Math.min(combo || 0, 10) * 40;
+  tone(base, 0, .12, 'triangle');
+  tone(base * 1.5, .08, .18, 'triangle');
+}
+function sfxWrong(){ tone(220, 0, .18, 'sawtooth', .07); tone(155, .13, .22, 'sawtooth', .07); }
+function sfxFinish(){ [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .12, .32, 'triangle', .11)); }
+function sfxLevelUp(){ [660, 880, 1100, 1320].forEach((f, i) => tone(f, i * .08, .25, 'sine', .1)); }
+
+function show(id){
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function makeOptions(answer, a, b, tables){
+  const set = new Set([answer]);
+  const pool = [];
+  if(typeof a === 'number' && typeof b === 'number'){
+    if(b - 1 >= 1) pool.push(a * (b - 1));
+    if(b + 1 <= 9) pool.push(a * (b + 1));
+    if(a - 1 >= 0) pool.push((a - 1) * b);
+    if(a + 1 <= 9) pool.push((a + 1) * b);
+  }
+  if(typeof b === 'number' && b >= 1){
+    for(const t of tables){ if(t !== a && t > 0) pool.push(t * b); }
+  }
+  if(typeof a === 'number' && a > 0){
+    for(let m = 1; m <= 9; m++){ if(m !== b) pool.push(a * m); }
+  }
+  for(const t of tables){
+    if(t === 0) continue;
+    for(let m = 1; m <= 9; m++) pool.push(t * m);
+  }
+  shuffle(pool);
+  for(const v of pool){
+    if(set.size >= 4) break;
+    if(v > 0 && v !== answer) set.add(v);
+  }
+  let n = 2;
+  while(set.size < 4){ if(n !== answer) set.add(n); n++; }
+  return shuffle(Array.from(set));
+}
+
+function makeOptionsRange(answer, min, max){
+  const set = new Set([answer]);
+  let guard = 0;
+  while(set.size < 4 && guard++ < 100) set.add(randInt(min, max));
+  let n = max + 1;
+  while(set.size < 4) set.add(n++);
+  return shuffle(Array.from(set));
+}
+
+function tableWeight(t){
+  const u = user();
+  const s = u.adaptiveStats[t] || { correct: 0, wrong: 0 };
+  return Math.max(0.25, 1 + s.wrong * 1.5 - s.correct * 0.2);
+}
+
+function pickAdaptiveTable(tables){
+  if(!tables || tables.length === 0) return 2;
+  const ws = tables.map(tableWeight);
+  const total = ws.reduce((a,b)=>a+b, 0);
+  let r = Math.random() * total;
+  for(let i = 0; i < tables.length; i++){
+    r -= ws[i];
+    if(r <= 0) return tables[i];
+  }
+  return tables[tables.length - 1];
+}
+
+function recordAdaptive(table, ok){
+  if(typeof table !== 'number') return;
+  const u = user();
+  if(!u.adaptiveStats[table]) u.adaptiveStats[table] = { correct: 0, wrong: 0 };
+  const s = u.adaptiveStats[table];
+  if(ok) s.correct = Math.min(20, s.correct + 1);
+  else   s.wrong   = Math.min(20, s.wrong + 1);
+}
+
+const WORD_TEMPLATES = [
+  { t:'一盒有 {a} 顆糖，{b} 盒共幾顆？' },
+  { t:'每排有 {a} 個座位，{b} 排共幾個座位？' },
+  { t:'每包餅乾 {a} 元，{b} 包共多少元？' },
+  { t:'每天讀 {a} 頁，{b} 天讀幾頁？' },
+  { t:'一盒雞蛋有 {a} 顆，{b} 盒共幾顆？' },
+  { t:'每束花有 {a} 朵，{b} 束共幾朵？' },
+];
+
+function buildBasic(lv){
+  const a = pickAdaptiveTable(lv.tables);
+  const b = randInt(1, 9);
+  const product = a * b;
+  return {
+    type:'basic', a, b,
+    text: `${a} × ${b} = <span class="q">?</span>`,
+    answer: product,
+    options: makeOptions(product, a, b, lv.tables),
+    hint: { mode:'array', a, b },
+    trackTable: a,
+    key: `basic:${a}x${b}`,
+  };
+}
+
+function buildMissing(lv){
+  const a = pickAdaptiveTable(lv.tables);
+  const b = randInt(1, 9);
+  const product = a * b;
+  const hideFirst = Math.random() < 0.5;
+  const answer = hideFirst ? a : b;
+  const known  = hideFirst ? b : a;
+  const text = hideFirst
+    ? `<span class="q">?</span> × ${known} = ${product}`
+    : `${known} × <span class="q">?</span> = ${product}`;
+  return {
+    type:'missing', a, b, hideFirst,
+    text, answer,
+    options: makeOptionsRange(answer, 1, 9),
+    hint: { mode:'array', a, b },
+    trackTable: a,
+    key: `missing:${a}x${b}:${hideFirst ? 1 : 0}`,
+  };
+}
+
+function buildCompare(lv){
+  const t = lv.tables;
+  const a1 = pickAdaptiveTable(t), b1 = randInt(1, 9);
+  let a2, b2, guard = 0;
+  do { a2 = pickAdaptiveTable(t); b2 = randInt(1, 9); guard++; }
+  while(guard < 20 && a1 * b1 === a2 * b2);
+  const p1 = a1 * b1, p2 = a2 * b2;
+  const answer = p1 > p2 ? '>' : p1 < p2 ? '<' : '=';
+  return {
+    type:'compare', a: a1, b: b1, a2, b2,
+    text: `${a1} × ${b1} <span class="q">?</span> ${a2} × ${b2}`,
+    answer,
+    options: shuffle(['>', '<', '=']),
+    hint: null,
+    trackTable: a1,
+    key: `compare:${a1}x${b1}:${a2}x${b2}`,
+  };
+}
+
+function buildRepeat(lv){
+  const a = pickAdaptiveTable(lv.tables);
+  const n = randInt(2, 4);
+  const parts = Array(n).fill(a).join(' + ');
+  const correct = `${a} × ${n}`;
+  const distractors = [`${n} × ${a}`, `${a} + ${n}`, `${a} × ${n + 1}`];
+  if(n - 1 >= 1) distractors.push(`${a} × ${n - 1}`);
+  const opts = shuffle([correct, ...shuffle(distractors).slice(0, 3)]);
+  return {
+    type:'repeat', a, n,
+    text: `${parts} = <span class="q">?</span>`,
+    answer: correct,
+    options: opts,
+    hint: { mode:'array', a, b: n },
+    trackTable: a,
+    key: `repeat:${a}x${n}`,
+  };
+}
+
+function buildWord(lv){
+  const a = pickAdaptiveTable(lv.tables);
+  const b = randInt(1, 9);
+  const tpl = pick(WORD_TEMPLATES);
+  const text = tpl.t.replace('{a}', a).replace('{b}', b);
+  return {
+    type:'word', a, b,
+    text: `<span class="small">應用題</span>${text}`,
+    answer: a * b,
+    options: makeOptions(a * b, a, b, lv.tables),
+    hint: { mode:'array', a, b },
+    trackTable: a,
+    key: `word:${a}x${b}:${tpl.t}`,
+  };
+}
+
+function buildBiggest(lv){
+  const exprs = [];
+  const seen = new Set();
+  let guard = 0;
+  while(exprs.length < 4 && guard++ < 100){
+    const a = pickAdaptiveTable(lv.tables);
+    const b = randInt(1, 9);
+    const k = a * b;
+    if(seen.has(k)) continue;
+    seen.add(k);
+    exprs.push({ a, b, k });
+  }
+  if(exprs.length < 4) return buildBasic(lv);
+  let maxItem = exprs[0];
+  for(const e of exprs) if(e.k > maxItem.k) maxItem = e;
+  return {
+    type:'biggest', a: maxItem.a, b: maxItem.b,
+    text: '哪一個算式的乘積<strong>最大</strong>？',
+    answer: `${maxItem.a} × ${maxItem.b}`,
+    options: shuffle(exprs.map(e => `${e.a} × ${e.b}`)),
+    hint: null,
+    trackTable: maxItem.a,
+    key: `biggest:${maxItem.a}x${maxItem.b}`,
+  };
+}
+
+function buildOneQuestion(lv){
+  const types = lv.types || ['basic'];
+  const type = pick(types);
+  if(type === 'missing') return buildMissing(lv);
+  if(type === 'compare') return buildCompare(lv);
+  if(type === 'repeat') return buildRepeat(lv);
+  if(type === 'word') return buildWord(lv);
+  if(type === 'biggest') return buildBiggest(lv);
+  return buildBasic(lv);
+}
+
+function makeQuestion(lv, opts = {}){
+  const exclude = opts.exclude || [];
+  let q, guard = 0;
+  do { q = buildOneQuestion(lv); guard++; }
+  while(guard < 8 && exclude.includes(q.key));
+  return q;
+}
+
+function rebuildQuestion(w){
+  if(w.type === 'basic'){
+    const { a, b } = w;
+    return {
+      type:'basic', a, b,
+      text: `${a} × ${b} = <span class="q">?</span>`,
+      answer: a * b,
+      options: makeOptions(a * b, a, b, [a]),
+      hint: { mode:'array', a, b },
+      trackTable: a, key: `basic:${a}x${b}`,
+    };
+  }
+  if(w.type === 'missing'){
+    const { a, b, hideFirst } = w;
+    const answer = hideFirst ? a : b;
+    const known  = hideFirst ? b : a;
+    return {
+      type:'missing', a, b, hideFirst,
+      text: hideFirst ? `<span class="q">?</span> × ${known} = ${a*b}` : `${known} × <span class="q">?</span> = ${a*b}`,
+      answer,
+      options: makeOptionsRange(answer, 1, 9),
+      hint: { mode:'array', a, b },
+      trackTable: a, key: `missing:${a}x${b}:${hideFirst ? 1 : 0}`,
+    };
+  }
+  if(w.type === 'repeat'){
+    const { a, n } = w;
+    const parts = Array(n).fill(a).join(' + ');
+    const correct = `${a} × ${n}`;
+    const distractors = [`${n} × ${a}`, `${a} + ${n}`, `${a} × ${n + 1}`];
+    if(n - 1 >= 1) distractors.push(`${a} × ${n - 1}`);
+    const opts = shuffle([correct, ...shuffle(distractors).slice(0, 3)]);
+    return {
+      type:'repeat', a, n,
+      text: `${parts} = <span class="q">?</span>`,
+      answer: correct,
+      options: opts,
+      hint: { mode:'array', a, b: n },
+      trackTable: a, key: `repeat:${a}x${n}`,
+    };
+  }
+  if(w.type === 'word'){
+    const { a, b } = w;
+    return buildWord({ tables: [a], types:['word'] });
+  }
+  return buildBasic({ tables: [2,3,4,5,6,7,8,9] });
+}
+
+let game = null;
+let qTimer = null;
+
+function startLevel(idx){
+  clearTimeout(qTimer);
+  const lv = LEVELS[idx];
+  game = {
+    levelIdx: idx, level: lv,
+    total: user().settings.perLevel,
+    done: 0, score: 0, combo: 0, maxCombo: 0, correct: 0, wrongInGame: 0,
+    locked: true, recentKeys: [], currentQ: null, answer: null, queue: null,
+  };
+  resetGameUI();
+  show('gameScreen');
+  qTimer = setTimeout(loadQuestion, 120);
+}
+
+function startWrongMode(){
+  clearTimeout(qTimer);
+  if(user().wrongBook.length === 0){ showToast('目前沒有錯題囉 🎉'); return; }
+  const pool = shuffle(user().wrongBook).slice(0, Math.min(10, user().wrongBook.length));
+  const questions = pool.map(rebuildQuestion);
+  game = {
+    levelIdx: 'wrong',
+    level: { name:'錯題重練', tables:[2], emoji:'📚', bg:'#fff3d6', types:['basic'] },
+    total: questions.length, done: 0, score: 0, combo: 0, maxCombo: 0,
+    correct: 0, wrongInGame: 0,
+    locked: true, recentKeys: [], currentQ: null, answer: null, queue: questions,
+  };
+  resetGameUI();
+  show('gameScreen');
+  qTimer = setTimeout(loadQuestion, 120);
+}
+
+function startCustom(tables){
+  clearTimeout(qTimer);
+  if(!tables || tables.length === 0){ showToast('請至少選一個乘法表'); return; }
+  game = {
+    levelIdx: 'custom',
+    level: { name:'自選練習', tables, emoji:'🎯', bg:'#e8e0ff',
+             types:['basic','missing','compare','repeat','word'] },
+    total: user().settings.perLevel, done: 0, score: 0, combo: 0, maxCombo: 0,
+    correct: 0, wrongInGame: 0,
+    locked: true, recentKeys: [], currentQ: null, answer: null, queue: null,
+  };
+  resetGameUI();
+  show('gameScreen');
+  qTimer = setTimeout(loadQuestion, 120);
+}
+
+function startDaily(){
+  const u = user();
+  if(u.dailyDone === todayStr()){ showToast('今天的挑戰已完成囉！'); return; }
+  const qs = buildDailyQuestions(todayStr());
+  game = {
+    levelIdx: 'daily',
+    level: { name:'每日挑戰', tables:[2,3,4,5,6,7,8,9], emoji:'📅', bg:'#fff3b8', types:['basic'] },
+    total: 5, done: 0, score: 0, combo: 0, maxCombo: 0, correct: 0, wrongInGame: 0,
+    locked: true, recentKeys: [], currentQ: null, answer: null, queue: qs,
+    isDaily: true,
+  };
+  resetGameUI();
+  show('gameScreen');
+  qTimer = setTimeout(loadQuestion, 120);
+}
+
+function buildDailyQuestions(seedStr){
+  let s = 0;
+  for(let i = 0; i < seedStr.length; i++) s = (s * 31 + seedStr.charCodeAt(i)) | 0;
+  const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+  const qs = [];
+  for(let i = 0; i < 5; i++){
+    const a = 2 + Math.floor(rnd() * 8);
+    const b = 1 + Math.floor(rnd() * 9);
+    qs.push({
+      type:'basic', a, b,
+      text: `${a} × ${b} = <span class="q">?</span>`,
+      answer: a * b,
+      options: makeOptions(a * b, a, b, [a]),
+      hint: { mode:'array', a, b },
+      trackTable: a, key: `basic:${a}x${b}`,
+    });
+  }
+  return qs;
+}
+
+function resetGameUI(){
+  $('#scoreVal').textContent = '0';
+  $('#progressFill').style.width = '0%';
+  setCombo(0);
+  setFeedback('', '');
+  $('#hintArea').classList.remove('show');
+  $('#hintArea').innerHTML = '';
+  $('#questionText').innerHTML = '';
+  $('#optionsBox').innerHTML = '';
+}
+
+function loadQuestion(){
+  if(!game) return;
+  if(game.done >= game.total){ endGame(); return; }
+
+  let q;
+  if(game.queue){
+    if(game.queue.length === 0){ endGame(); return; }
+    q = game.queue.shift();
+  } else {
+    q = makeQuestion(game.level, { exclude: game.recentKeys });
+  }
+
+  game.currentQ = q;
+  game.answer = q.answer;
+  game.recentKeys.push(q.key);
+  if(game.recentKeys.length > 3) game.recentKeys.shift();
+  game.locked = false;
+
+  const qEl = $('#questionText');
+  qEl.innerHTML = q.text;
+  qEl.style.animation = 'none';
+  void qEl.offsetWidth;
+  qEl.style.animation = '';
+
+  const hintEl = $('#hintArea');
+  hintEl.classList.remove('show');
+  hintEl.innerHTML = '';
+
+  const hb = $('#hintBtn');
+  hb.disabled = !q.hint;
+
+  renderOptions(q.options);
+  setFeedback('', '');
+}
+
+function renderOptions(options){
+  const box = $('#optionsBox');
+  box.innerHTML = '';
+  options.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    const label = String(v);
+    btn.textContent = label;
+    if(label === '>' || label === '<' || label === '=') btn.classList.add('symbol');
+    else if(label.includes('×') || label.includes('+')) btn.classList.add('text-opt');
+    btn.dataset.val = label;
+    btn.addEventListener('click', () => handleAnswer(label, btn));
+    box.appendChild(btn);
+  });
+}
+
+function handleAnswer(value, btn){
+  if(!game || game.locked) return;
+  game.locked = true;
+
+  const correctAnswer = game.currentQ ? game.currentQ.answer : game.answer;
+  const isCorrect = String(value) === String(correctAnswer);
+  const buttons = $$('#optionsBox .opt');
+
+  if(isCorrect){
+    btn.classList.add('correct');
+    game.correct++;
+    game.combo++;
+    if(game.combo > game.maxCombo) game.maxCombo = game.combo;
+    const gain = 10 + Math.min(game.combo - 1, 5) * 2;
+    game.score += gain;
+    $('#scoreVal').textContent = game.score;
+    setCombo(game.combo);
+    setFeedback('答對了！ +' + gain + ' 分', 'good');
+    sfxCorrect(game.combo);
+    burst(btn);
+    addEnergy(1);
+
+    if(game.combo === 5) awardBadge('combo5');
+    if(game.combo === 10) awardBadge('combo10');
+
+    if(game.currentQ) recordAdaptive(game.currentQ.trackTable, true);
+
+    if(game.currentQ && game.currentQ.key){
+      const idx = user().wrongBook.findIndex(w => w.key === game.currentQ.key);
+      if(idx >= 0){ user().wrongBook.splice(idx, 1); saveState(); updateStartUI(); }
+    }
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b => {
+      if(String(b.dataset.val) === String(correctAnswer)) b.classList.add('correct');
+    });
+    game.combo = 0;
+    game.wrongInGame++;
+    setCombo(0);
+    setFeedback('再想想～ 正確答案是 ' + correctAnswer, 'bad');
+    sfxWrong();
+
+    if(game.currentQ) recordAdaptive(game.currentQ.trackTable, false);
+
+    const q = game.currentQ;
+    if(q && q.type !== 'biggest' && q.key && !user().wrongBook.some(w => w.key === q.key)){
+      const entry = { key: q.key, type: q.type, a: q.a, b: q.b };
+      if(q.type === 'missing') entry.hideFirst = q.hideFirst;
+      if(q.type === 'repeat'){ entry.n = q.n; delete entry.b; }
+      user().wrongBook.push(entry);
+      if(user().wrongBook.length > 50) user().wrongBook.shift();
+      saveState();
+      updateStartUI();
+    }
+  }
+
+  game.done++;
+  $('#progressFill').style.width = (game.done / game.total * 100) + '%';
+  qTimer = setTimeout(loadQuestion, isCorrect ? 650 : 1400);
+}
+
+function setCombo(n){
+  const el = $('#comboTag');
+  el.className = 'combo';
+  if(n < 2){ return; }
+  let lv = 1, txt = '連擊 ×' + n;
+  if(n >= 10){ lv = 4; txt = '⚡ 超級連擊 ×' + n; }
+  else if(n >= 6){ lv = 3; txt = '🔥🔥 連擊 ×' + n; }
+  else if(n >= 4){ lv = 2; txt = '🔥 連擊 ×' + n; }
+  el.textContent = txt;
+  el.classList.add('show', 'lv' + lv);
+}
+
+function setFeedback(text, type){
+  const el = $('#feedback');
+  el.textContent = text;
+  el.className = 'feedback' + (type ? ' ' + type : '');
+}
+
+function showHint(){
+  if(!game || !game.currentQ || !game.currentQ.hint) return;
+  const h = game.currentQ.hint;
+  const el = $('#hintArea');
+  if(h.mode === 'array'){
+    el.innerHTML = `<div class="hint-grid" style="grid-template-columns:repeat(${h.b},1fr)">${'<span class="dot"></span>'.repeat(h.a * h.b)}</div>`;
+  }
+  el.classList.add('show');
+}
+
+function endGame(){
+  $('#progressFill').style.width = '100%';
+  const isLevel = typeof game.levelIdx === 'number';
+
+  if(isLevel){
+    const wrongCount = game.total - game.correct;
+    let stars;
+    if(wrongCount === 0) stars = 3;
+    else if(wrongCount <= 2) stars = 2;
+    else stars = 1;
+
+    const prev = user().bestStars[game.levelIdx] || 0;
+    user().bestStars[game.levelIdx] = Math.max(prev, stars);
+    const isNewBest = stars > prev;
+
+    if(game.levelIdx === 0 && stars === 3) awardBadge('warmup');
+    if(stars === 3) awardBadge('three_star');
+    if(wrongCount === 0) awardBadge('perfect');
+    if(game.levelIdx === 0) awardBadge('first_step');
+    if(LEVELS.every((_, i) => (user().bestStars[i] || 0) === 3)) awardBadge('all_three');
+
+    saveState();
+    buildLevels();
+
+    const starBox = $('#endStars');
+    starBox.innerHTML = '';
+    for(let i = 0; i < 3; i++){
+      const s = document.createElement('span');
+      s.className = 'star' + (i < stars ? '' : ' dim');
+      s.textContent = '⭐';
+      s.style.animationDelay = (i * 0.15) + 's';
+      starBox.appendChild(s);
+    }
+    $('#starCaption').textContent =
+      (isNewBest ? '🎉 新紀錄！' : '本關最佳：' + (user().bestStars[game.levelIdx] || 0) + ' 星') +
+      '　·　獲得 ' + stars + ' 顆星';
+    $('#endTitle').textContent =
+      stars === 3 ? '太厲害了！滿分等級 🎉' :
+      stars === 2 ? '做得好！再挑戰一次 💪' : '繼續加油，你可以的！🌱';
+  } else if(game.isDaily){
+    user().dailyDone = todayStr();
+    user().extraStars += 1;
+    awardBadge('daily_hero');
+    saveState();
+    $('#endStars').innerHTML = '📅';
+    $('#starCaption').textContent = '完成每日挑戰 +1 ⭐';
+    $('#endTitle').textContent = '每日挑戰完成！';
+    updateStartUI();
+  } else if(game.levelIdx === 'wrong'){
+    awardBadge('wrong_killer');
+    saveState();
+    $('#endStars').innerHTML = '📚';
+    $('#starCaption').textContent = '錯題重練完成';
+    $('#endTitle').textContent = '錯題練習完成！';
+  } else {
+    $('#endStars').innerHTML = '🎯';
+    $('#starCaption').textContent = '自選練習完成（不計星星）';
+    $('#endTitle').textContent = '練習完成！';
+  }
+
+  $('#endScore').textContent = game.score;
+  $('#endCorrect').textContent = game.correct + ' / ' + game.total;
+  $('#wrongAgainBtn').style.display = game.wrongInGame > 0 ? 'block' : 'none';
+
+  sfxFinish();
+  updateStartUI();
+  show('endScreen');
+}
+
+function addEnergy(n){
+  const u = user();
+  u.energy += n;
+  const need = u.level * 20;
+  if(u.energy >= need){
+    u.level++;
+    u.energy -= need;
+    sfxLevelUp();
+    showToast('🎉 升級！Lv.' + u.level);
+  }
+  saveState();
+}
+
+function awardBadge(id){
+  const u = user();
+  if(u.badges.includes(id)) return;
+  u.badges.push(id);
+  saveState();
+  const b = BADGES.find(x => x.id === id);
+  if(b) showToast(b.icon + ' 獲得徽章：' + b.name);
+}
+
+function burst(el){
+  const r = el.getBoundingClientRect();
+  const icons = ['⭐', '✨', '💫', '🌟'];
+  for(let i = 0; i < 6; i++){
+    const s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = icons[i % icons.length];
+    s.style.left = (r.left + r.width / 2) + 'px';
+    s.style.top  = (r.top + r.height / 2) + 'px';
+    s.style.setProperty('--dx', (Math.random() * 170 - 85) + 'px');
+    s.style.setProperty('--dy', (-40 - Math.random() * 100) + 'px');
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 900);
+  }
+}
+
+function buildLevels(){
+  const wrap = $('#levelList');
+  wrap.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'level-btn';
+    const got = user().bestStars[i] || 0;
+    btn.innerHTML = `
+      <span class="level-emoji" style="background:${lv.bg}">${lv.emoji}</span>
+      <span class="level-text">
+        <span class="level-name">${lv.name}</span>
+        <span class="level-sub">${lv.sub}</span>
+      </span>
+      <span class="level-stars">${got ? '⭐'.repeat(got) : '▶'}</span>
+    `;
+    btn.addEventListener('click', () => startLevel(i));
+    wrap.appendChild(btn);
+  });
+}
+
+function updateStartUI(){
+  const u = user();
+  $('#userName').textContent = state.currentUser;
+  $('#userAvatar').textContent = '👤';
+  $('#levelNum').textContent = u.level;
+  const need = u.level * 20;
+  $('#energyTxt').textContent = u.energy + '/' + need;
+  $('#energyFill').style.width = Math.min(100, (u.energy / need) * 100) + '%';
+  $('#badgeCount').textContent = u.badges.length + '/' + BADGES.length;
+  $('#soundBtn').textContent = soundOn ? '🔊' : '🔇';
+
+  const wb = $('#wrongModeBtn');
+  $('#wrongCount').textContent = u.wrongBook.length;
+  wb.style.display = u.wrongBook.length > 0 ? 'flex' : 'none';
+
+  const dailyBtn = $('#dailyBtn');
+  if(u.dailyDone === todayStr()){
+    dailyBtn.classList.remove('highlight');
+    dailyBtn.textContent = '📅 今日已完成 ✓';
+  } else {
+    dailyBtn.classList.add('highlight');
+    dailyBtn.textContent = '📅 每日挑戰';
+  }
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function openSettings(){
+  const u = user();
+  openModal(`
+    <h3>⚙️ 設定</h3>
+    <div class="modal-row">
+      <label>每關題數</label>
+      <div class="seg" id="perLevelSeg">
+        ${[5,10,15].map(n => `<button data-n="${n}" class="${u.settings.perLevel===n?'on':''}">${n} 題</button>`).join('')}
+      </div>
+    </div>
+    <div class="modal-row">
+      <label>音效</label>
+      <div class="seg" id="soundSeg">
+        <button data-v="on" class="${soundOn?'on':''}">開</button>
+        <button data-v="off" class="${!soundOn?'on':''}">關</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="modalClear">清除本用戶紀錄</button>
+      <button class="btn primary" id="modalClose">關閉</button>
+    </div>
+  `);
+  $('#perLevelSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    user().settings.perLevel = Number(b.dataset.n);
+    saveState();
+    $$('#perLevelSeg button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('#soundSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    soundOn = b.dataset.v === 'on';
+    saveSound();
+    $$('#soundSeg button').forEach(x => x.classList.toggle('on', x === b));
+    updateStartUI();
+  });
+  $('#modalClear').addEventListener('click', () => {
+    if(confirm('確定要清除「' + state.currentUser + '」的所有星星、錯題、徽章嗎？')){
+      state.users[state.currentUser] = newUserData();
+      saveState();
+      closeModal();
+      buildLevels();
+      updateStartUI();
+      applyTheme();
+      showToast('已清除紀錄');
+    }
+  });
+  $('#modalClose').addEventListener('click', closeModal);
+}
+
+function openUsers(){
+  const names = Object.keys(state.users);
+  const listHTML = names.map(n => `
+    <button class="user-item ${n === state.currentUser ? 'on' : ''}" data-name="${n}">
+      <span class="avatar">👤</span><span>${n}</span>
+    </button>
+  `).join('');
+  openModal(`
+    <h3>👥 切換使用者</h3>
+    <div class="user-list">${listHTML}</div>
+    <div class="modal-actions">
+      <button class="btn" id="newUserBtn">＋ 新增</button>
+      <button class="btn primary" id="modalClose">關閉</button>
+    </div>
+  `);
+  $$('.user-item').forEach(b => b.addEventListener('click', () => {
+    state.currentUser = b.dataset.name;
+    saveState();
+    closeModal();
+    applyTheme();
+    buildLevels();
+    updateStartUI();
+    showToast('切換到「' + state.currentUser + '」');
+  }));
+  $('#newUserBtn').addEventListener('click', () => {
+    const name = prompt('新使用者的名字（例如：小明）', '');
+    if(!name || !name.trim()) return;
+    const n = name.trim().slice(0, 12);
+    if(state.users[n]){ showToast('這個名字已經存在'); return; }
+    state.users[n] = newUserData();
+    state.currentUser = n;
+    saveState();
+    closeModal();
+    applyTheme();
+    buildLevels();
+    updateStartUI();
+    showToast('已建立「' + n + '」');
+  });
+  $('#modalClose').addEventListener('click', closeModal);
+}
+
+function openThemes(){
+  const u = user();
+  const ts = totalStars();
+  const html = THEMES.map(t => {
+    const unlocked = u.unlockedThemes.includes(t.id) || ts >= t.stars;
+    if(unlocked && !u.unlockedThemes.includes(t.id)){
+      u.unlockedThemes.push(t.id); saveState();
+    }
+    const isOn = u.theme === t.id;
+    return `
+      <button class="theme-card ${isOn ? 'on' : ''}" data-id="${t.id}" ${unlocked ? '' : 'disabled'}>
+        <div class="theme-preview ${t.cls}"></div>
+        <div class="theme-name">${t.icon} ${t.name}</div>
+        <div class="theme-cost">${unlocked ? (isOn ? '使用中' : '點擊套用') : '需 ' + t.stars + ' ⭐'}</div>
+      </button>
+    `;
+  }).join('');
+  openModal(`
+    <h3>🎨 主題背景</h3>
+    <p style="text-align:center; font-size:.85rem; color:#7a8aa0; margin:0 0 4px;">
+      已獲得 ⭐ ${ts} 顆 · 累積星星解鎖更多場景
+    </p>
+    <div class="theme-grid">${html}</div>
+    <div class="modal-actions"><button class="btn primary" id="modalClose">關閉</button></div>
+  `);
+  $$('.theme-card').forEach(b => b.addEventListener('click', () => {
+    if(b.disabled) return;
+    user().theme = b.dataset.id;
+    saveState();
+    applyTheme();
+    closeModal();
+    showToast('已套用「' + (THEMES.find(t => t.id === b.dataset.id)?.name || '') + '」');
+  }));
+  $('#modalClose').addEventListener('click', closeModal);
+}
+
+function openBadges(){
+  const owned = user().badges;
+  const html = BADGES.map(b => `
+    <div class="badge-item ${owned.includes(b.id) ? 'owned' : ''}">
+      <span class="badge-icon">${b.icon}</span>
+      <span class="badge-name">${b.name}</span>
+      <span class="badge-desc">${b.desc}</span>
+    </div>
+  `).join('');
+  openModal(`
+    <h3>🏅 徽章（${owned.length}/${BADGES.length}）</h3>
+    <div class="badge-grid">${html}</div>
+    <div class="modal-actions"><button class="btn primary" id="modalClose">關閉</button></div>
+  `);
+  $('#modalClose').addEventListener('click', closeModal);
+}
+
+function openCustom(){
+  const tables = [0,1,2,3,4,5,6,7,8,9];
+  const selected = new Set([7,8]);
+  const render = () => tables.map(t => `
+    <button data-t="${t}" class="${selected.has(t)?'on':''}">${t}</button>
+  `).join('');
+  openModal(`
+    <h3>🎯 自選表格練習</h3>
+    <p style="text-align:center; font-size:.85rem; color:#7a8aa0; margin:0;">勾選想練習的乘法表</p>
+    <div class="table-check" id="tableCheck">${render()}</div>
+    <div class="modal-actions">
+      <button class="btn" id="modalClose">取消</button>
+      <button class="btn primary" id="startCustomBtn">開始練習</button>
+    </div>
+  `);
+  $('#tableCheck').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const t = Number(b.dataset.t);
+    if(selected.has(t)) selected.delete(t); else selected.add(t);
+    b.classList.toggle('on', selected.has(t));
+  });
+  $('#startCustomBtn').addEventListener('click', () => {
+    if(selected.size === 0){ showToast('請至少選一個'); return; }
+    closeModal();
+    startCustom(Array.from(selected));
+  });
+  $('#modalClose').addEventListener('click', closeModal);
+}
+
+$('#userBtn').addEventListener('click', openUsers);
+$('#settingsBtn').addEventListener('click', openSettings);
+$('#themeBtn').addEventListener('click', openThemes);
+$('#badgesBtn').addEventListener('click', openBadges);
+$('#customBtn').addEventListener('click', openCustom);
+$('#dailyBtn').addEventListener('click', startDaily);
+$('#soundBtn').addEventListener('click', () => {
+  soundOn = !soundOn;
+  saveSound();
+  updateStartUI();
+  if(soundOn) sfxCorrect(1);
+});
+
+$('#backBtn').addEventListener('click', () => {
+  clearTimeout(qTimer);
+  game = null;
+  show('startScreen');
+  updateStartUI();
+});
+
+$('#hintBtn').addEventListener('click', () => {
+  const el = $('#hintArea');
+  if(el.classList.contains('show')) el.classList.remove('show');
+  else showHint();
+});
+
+$('#replayBtn').addEventListener('click', () => {
+  if(!game) return;
+  if(game.levelIdx === 'wrong') startWrongMode();
+  else if(game.levelIdx === 'custom') startCustom(game.level.tables);
+  else if(game.isDaily) startDaily();
+  else startLevel(game.levelIdx);
+});
+
+$('#menuBtn').addEventListener('click', () => {
+  game = null;
+  show('startScreen');
+  updateStartUI();
+});
+
+$('#wrongAgainBtn').addEventListener('click', startWrongMode);
+$('#wrongModeBtn').addEventListener('click', startWrongMode);
+
+document.addEventListener('keydown', e => {
+  if(!$('#gameScreen').classList.contains('active')) return;
+  if(!game || game.locked) return;
+  if(e.key >= '1' && e.key <= '4'){
+    const idx = Number(e.key) - 1;
+    const btns = $$('#optionsBox .opt');
+    if(btns[idx]){ e.preventDefault(); btns[idx].click(); }
+  }
+});
+
+document.addEventListener('click', () => getAudio(), { once: true });
+
+applyTheme();
+buildLevels();
+updateStartUI();
+</script>
+</body>
+</html>
